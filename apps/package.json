@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "workspaces": [
+    "admin",
+    "buyer",
+    "seller"
+  ]
+}

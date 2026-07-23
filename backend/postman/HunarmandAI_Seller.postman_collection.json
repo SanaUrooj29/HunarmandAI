@@ -1,0 +1,1574 @@
+{
+  "info": {
+    "name": "HunarmandAI — Seller",
+    "description": "All endpoints require a Seller session (Bearer JWT from OTP login) unless marked public. Every route below except /auth/otp/* is gated by authenticateUser + requireRole(seller) at the router level.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "POST /auth/otp/request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/seller/auth/otp/request",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "auth",
+                "otp",
+                "request"
+              ]
+            },
+            "description": "Request OTP\n\nSRS ref: UC-01, FR-1-01, FR-1-04\n\nCreates the seller account on first contact (role selection happens client-side before this call). Rate-limited to 3 requests / 10 min per phone.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+923001234567\",\n  \"preferredLanguage\": \"ur\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/otp/verify",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/seller/auth/otp/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "auth",
+                "otp",
+                "verify"
+              ]
+            },
+            "description": "Verify OTP and log in\n\nSRS ref: UC-01, FR-1-02, FR-1-03\n\nRate-limited to 5 attempts / 15 min per phone (lockout on the 6th). Returns a JWT valid for 7 days by default.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+923001234567\",\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data && res.data.token) {",
+                  "    const role = pm.request.url.path.includes(\"seller\") ? \"seller_token\" : \"buyer_token\";",
+                  "    pm.collectionVariables.set(role, res.data.token);",
+                  "    if (res.data.seller) pm.collectionVariables.set(\"seller_id\", res.data.seller.id);",
+                  "    if (res.data.buyer) pm.collectionVariables.set(\"buyer_id\", res.data.buyer.id);",
+                  "    console.log(\"Saved token to collection variable: \" + role);",
+                  "}",
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Logout (revokes current token)\n\nSRS ref: UC-01\n\nAdds this specific token’s jti to the revocation list — a real server-side logout, not just client-side token deletion."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "GET /profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "profile"
+              ]
+            },
+            "description": "Get my profile\n\nSRS ref: UC-02"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "profile"
+              ]
+            },
+            "description": "Update my profile\n\nSRS ref: UC-02\n\nAccepts partial updates — profileComplete is recalculated automatically once username, cnic, shopName, city, and productCategory are all present.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"Amina Crafts\",\n  \"gender\": \"female\",\n  \"cnic\": \"3520112223334\",\n  \"shopName\": \"Amina Handicrafts\",\n  \"city\": \"Lahore\",\n  \"productCategory\": \"{{category_id}}\",\n  \"shopDescription\": \"Hand-embroidered textiles made with traditional Punjabi thread work.\",\n  \"socialMediaLinks\": [\n    \"https://instagram.com/aminahandicrafts\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /profile/picture",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/profile/picture",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "profile",
+                "picture"
+              ]
+            },
+            "description": "Upload profile picture\n\nmultipart/form-data upload, field name \"picture\". Max 8MB, jpeg/png/webp only.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "picture",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /profile",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "profile"
+              ]
+            },
+            "description": "Delete my account\n\nSoft delete — sets accountStatus to \"deleted\", preserves order/review history."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Wallet",
+      "item": [
+        {
+          "name": "GET /wallet",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/wallet",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "wallet"
+              ]
+            },
+            "description": "Get my wallet balance\n\nSRS ref: UC-02"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /wallet/transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/wallet/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "wallet",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "List my wallet transaction history"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /wallet/withdraw",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/wallet/withdraw",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "wallet",
+                "withdraw"
+              ]
+            },
+            "description": "Request a withdrawal\n\nSRS ref: FR-4-04\n\nOnly permitted after 2+ completed sales (platform-configurable). Funds are reserved from availableBalance immediately — if manual approval is on, the transaction stays \"pending\" until an admin approves/rejects it (Admin → Wallet).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "POST /products/ai-listing",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/products/ai-listing",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "products",
+                "ai-listing"
+              ]
+            },
+            "description": "Generate AI listing suggestion from a photo\n\nSRS ref: UC-03, FR-2\n\nmultipart/form-data, field name \"image\". Uploads the photo and calls Claude Vision for a bilingual title/description/category/price suggestion. Does NOT create a product — review the suggestion, then call POST /products to publish. Degrades gracefully (suggestion: null) if the AI service is unavailable or unconfigured.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /products",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "products"
+              ]
+            },
+            "description": "Create a product listing\n\nSRS ref: UC-03, UC-04, FR-2-06\n\nAlways starts at approvalStatus \"pending\". Requires a completed seller profile. Triggers the first-product micro-learning lesson and the underpricing check.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": \"{{category_id}}\",\n  \"title\": \"Hand-embroidered Cushion Cover\",\n  \"description\": \"A beautiful hand-embroidered cushion cover made with traditional thread work.\",\n  \"images\": [\n    \"https://cdn.example.com/products/cushion.jpg\"\n  ],\n  \"price\": 1500,\n  \"quantity\": 5,\n  \"stockStatus\": \"in_stock\",\n  \"tags\": [\n    \"handmade\",\n    \"embroidery\"\n  ],\n  \"isAiGenerated\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data && res.data._id) {",
+                  "    pm.collectionVariables.set(\"product_id\", res.data._id);",
+                  "    console.log(\"Saved product_id: \" + res.data._id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "stockStatus",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "approvalStatus",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "List my products"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /products/stock/bulk",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/products/stock/bulk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "products",
+                "stock",
+                "bulk"
+              ]
+            },
+            "description": "Bulk update stock status\n\nE.g. mark everything out of stock before travel.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productIds\": [\n    \"{{product_id}}\"\n  ],\n  \"stockStatus\": \"out_of_stock\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /products/:productId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/products/:productId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "products",
+                ":productId"
+              ]
+            },
+            "description": "Get one of my products"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /products/:productId",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/products/:productId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "products",
+                ":productId"
+              ]
+            },
+            "description": "Edit a product\n\nMaterially editing title/description/images/category on an already-approved listing resets it to \"pending\" for re-review.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Hand-embroidered Cushion Cover (Updated)\",\n  \"price\": 1600\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /products/:productId/stock",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/products/:productId/stock",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "products",
+                ":productId",
+                "stock"
+              ]
+            },
+            "description": "Toggle stock status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stockStatus\": \"out_of_stock\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /products/:productId",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/products/:productId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "products",
+                ":productId"
+              ]
+            },
+            "description": "Delete a product\n\nBlocked with 409 if the product has any open (non-delivered, non-cancelled) orders."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "GET /orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "List my orders\n\nSRS ref: UC-06"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /orders/:orderId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/orders/:orderId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "orders",
+                ":orderId"
+              ]
+            },
+            "description": "Get order detail (includes buyer credibility score)\n\nSRS ref: FR-7-02"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /orders/:orderId/accept",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/orders/:orderId/accept",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "orders",
+                ":orderId",
+                "accept"
+              ]
+            },
+            "description": "Accept an order"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /orders/:orderId/reject",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/orders/:orderId/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "orders",
+                ":orderId",
+                "reject"
+              ]
+            },
+            "description": "Reject an order (auto-refund)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Item is out of stock\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /orders/:orderId/status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/orders/:orderId/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "orders",
+                ":orderId",
+                "status"
+              ]
+            },
+            "description": "Advance order status\n\nSRS ref: FR-3-01, FR-3-04\n\nValid transitions only: accepted→preparing→shipped→delivered. On \"delivered\", moves the seller’s pending wallet balance to available and increments completedSalesCount.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nextStatus\": \"shipped\",\n  \"courierName\": \"Leopards Courier\",\n  \"trackingReference\": \"LEO123456789\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Micro-Learning",
+      "item": [
+        {
+          "name": "GET /learning",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/learning",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "learning"
+              ]
+            },
+            "description": "List my lessons\n\nSRS ref: FR-5, UC-07"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /learning/:lessonId",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/learning/:lessonId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "learning",
+                ":lessonId"
+              ]
+            },
+            "description": "Update lesson status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Support Tickets",
+      "item": [
+        {
+          "name": "POST /support-tickets",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/support-tickets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "support-tickets"
+              ]
+            },
+            "description": "Raise a support ticket",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"relatedOrderId\": \"{{order_id}}\",\n  \"subject\": \"Payment not received for delivered order\",\n  \"description\": \"I delivered order #HMD-260714-ABC123 five days ago but the funds still show as pending.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /support-tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/support-tickets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "support-tickets"
+              ]
+            },
+            "description": "List my tickets"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /support-tickets/:ticketId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/support-tickets/:ticketId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "support-tickets",
+                ":ticketId"
+              ]
+            },
+            "description": "Get my ticket detail"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /support-tickets/:ticketId/respond",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{seller_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seller/support-tickets/:ticketId/respond",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "seller",
+                "support-tickets",
+                ":ticketId",
+                "respond"
+              ]
+            },
+            "description": "Add a response to my ticket",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Following up — any update on this?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "module_base",
+      "value": "/api/seller"
+    }
+  ]
+}

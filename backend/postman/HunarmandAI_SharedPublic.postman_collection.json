@@ -1,0 +1,584 @@
+{
+  "info": {
+    "name": "HunarmandAI — Shared / Public",
+    "description": "Endpoints not owned by a single panel: the category tree, marketplace browsing, and product reviews. Browsing and category listing are fully public (no auth); review submission requires a buyer session.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "GET /categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ]
+            },
+            "description": "List all active categories\n\nSRS ref: FR-6-03\n\nReturns the full active category tree (top-level categories with their subcategories nested inside). Used by sellers to pick a category and by buyers to filter the marketplace."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Marketplace (Browse)",
+      "item": [
+        {
+          "name": "GET /marketplace",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "marketplace"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "disabled": true
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Full-text search across title/description/tags"
+                },
+                {
+                  "key": "categoryId",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "minPrice",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "city",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Matches the seller’s city"
+                },
+                {
+                  "key": "minRating",
+                  "value": "",
+                  "disabled": true,
+                  "description": "0–5"
+                },
+                {
+                  "key": "stockStatus",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Search / filter products\n\nSRS ref: FR-6-01, FR-6-02\n\nFull-text search plus filters. Only approved, non-deleted listings are ever returned."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /marketplace/featured",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/featured",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "marketplace",
+                "featured"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Featured products feed"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /marketplace/latest",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/latest",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "marketplace",
+                "latest"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Latest products feed"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /marketplace/popular",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/popular",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "marketplace",
+                "popular"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Popular products feed (by salesCount)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /marketplace/recommended",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/recommended",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "marketplace",
+                "recommended"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Recommended products feed (highest-rated proxy)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /marketplace/sellers/:sellerId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/sellers/:sellerId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "marketplace",
+                "sellers",
+                ":sellerId"
+              ]
+            },
+            "description": "Seller storefront\n\nPublic seller profile plus their approved product listings."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /marketplace/:productId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/marketplace/:productId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "marketplace",
+                ":productId"
+              ]
+            },
+            "description": "Product detail\n\nIncrements the product’s viewCount as a side effect."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "GET /reviews/product/:productId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reviews/product/:productId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "product",
+                ":productId"
+              ]
+            },
+            "description": "List visible reviews for a product"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /reviews",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reviews",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reviews"
+              ]
+            },
+            "description": "Submit a review\n\nSRS ref: FR-6-04\n\nOnly allowed if the buyer has a delivered order containing this product.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{product_id}}\",\n  \"orderId\": \"{{order_id}}\",\n  \"rating\": 5,\n  \"comment\": \"Beautiful craftsmanship, exactly as pictured!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /reviews/:reviewId",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reviews/:reviewId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                ":reviewId"
+              ]
+            },
+            "description": "Edit a review (within 48h edit window)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 4,\n  \"comment\": \"Updated my rating after using it for a week.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /reviews/:reviewId/report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/reviews/:reviewId/report",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                ":reviewId",
+                "report"
+              ]
+            },
+            "description": "Report a review as fake/abusive\n\nFiles a Report for admin review — does not hide the review itself (that requires admin action, see Admin → Reports).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"This review appears to be fake — the reviewer never purchased this item.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "module_base",
+      "value": "/api"
+    }
+  ]
+}

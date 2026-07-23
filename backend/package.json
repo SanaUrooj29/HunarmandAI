@@ -1,0 +1,40 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "seed:admin": "node scripts/seedAdmin.js",
+    "seed:categories": "node scripts/seedCategories.js",
+    "test:auth": "node tests/auth.e2e.test.js",
+    "test:seller": "node tests/seller.e2e.test.js",
+    "test:buyer": "node tests/buyer.e2e.test.js",
+    "test:admin": "node tests/admin.e2e.test.js",
+    "test": "npm run test:auth && npm run test:seller && npm run test:buyer && npm run test:admin && npm run test:sms",
+    "test:sms": "node tests/sms.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1081.0",
+    "axios": "^1.18.1",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.7.4",
+    "multer": "^2.2.0",
+    "twilio": "^6.0.2"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^11.2.0",
+    "supertest": "^7.2.2"
+  }
+}

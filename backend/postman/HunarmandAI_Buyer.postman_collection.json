@@ -1,0 +1,1179 @@
+{
+  "info": {
+    "name": "HunarmandAI — Buyer",
+    "description": "Endpoints require a Buyer session unless marked public. Marketplace browsing and category listing live under /api/marketplace and /api/categories respectively — see the Shared / Public collection.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "POST /auth/otp/request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/buyer/auth/otp/request",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "auth",
+                "otp",
+                "request"
+              ]
+            },
+            "description": "Request OTP\n\nSRS ref: UC-01, FR-1-01, FR-1-04",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+923009998888\",\n  \"preferredLanguage\": \"en\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/otp/verify",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/buyer/auth/otp/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "auth",
+                "otp",
+                "verify"
+              ]
+            },
+            "description": "Verify OTP and log in\n\nSRS ref: UC-01",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+923009998888\",\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success && res.data && res.data.token) {",
+                  "    const role = pm.request.url.path.includes(\"seller\") ? \"seller_token\" : \"buyer_token\";",
+                  "    pm.collectionVariables.set(role, res.data.token);",
+                  "    if (res.data.seller) pm.collectionVariables.set(\"seller_id\", res.data.seller.id);",
+                  "    if (res.data.buyer) pm.collectionVariables.set(\"buyer_id\", res.data.buyer.id);",
+                  "    console.log(\"Saved token to collection variable: \" + role);",
+                  "}",
+                  "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Logout (revokes current token)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Profile & Addresses",
+      "item": [
+        {
+          "name": "GET /profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "profile"
+              ]
+            },
+            "description": "Get my profile"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "profile"
+              ]
+            },
+            "description": "Update my profile",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Zainab Khan\",\n  \"preferredLanguage\": \"ur\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /profile/addresses",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/profile/addresses",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "profile",
+                "addresses"
+              ]
+            },
+            "description": "Add a saved address",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Home\",\n  \"addressLine\": \"456 Bazaar Road, Model Town\",\n  \"city\": \"Lahore\",\n  \"isDefault\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /profile/addresses/:addressId",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/profile/addresses/:addressId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "profile",
+                "addresses",
+                ":addressId"
+              ]
+            },
+            "description": "Update a saved address",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressLine\": \"789 Main Street\",\n  \"isDefault\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /profile/addresses/:addressId",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/profile/addresses/:addressId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "profile",
+                "addresses",
+                ":addressId"
+              ]
+            },
+            "description": "Delete a saved address"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "GET /cart",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/cart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "cart"
+              ]
+            },
+            "description": "Get my cart"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /cart/items",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/cart/items",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "cart",
+                "items"
+              ]
+            },
+            "description": "Add item to cart",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{product_id}}\",\n  \"quantity\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /cart/items/:productId",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/cart/items/:productId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "cart",
+                "items",
+                ":productId"
+              ]
+            },
+            "description": "Update item quantity\n\nSetting quantity to 0 removes the item.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /cart/items/:productId",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/cart/items/:productId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "cart",
+                "items",
+                ":productId"
+              ]
+            },
+            "description": "Remove item from cart"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /cart",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/cart",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "cart"
+              ]
+            },
+            "description": "Clear entire cart"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Checkout",
+      "item": [
+        {
+          "name": "POST /checkout/initiate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/checkout/initiate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "checkout",
+                "initiate"
+              ]
+            },
+            "description": "Initiate checkout\n\nSRS ref: UC-05\n\nRe-validates stock, splits the cart by seller (one order-group per seller), and returns a signed gateway request. Does NOT create Order records yet — that only happens after a verified payment callback. Redirect the buyer’s browser to gatewayRequest.baseUrl with gatewayRequest.fields.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shippingAddress\": {\n    \"addressLine\": \"456 Bazaar Road\",\n    \"city\": \"Lahore\"\n  },\n  \"paymentMethod\": \"jazzcash\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /checkout/callback/:method",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/buyer/checkout/callback/:method",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "checkout",
+                "callback",
+                ":method"
+              ]
+            },
+            "description": "Payment gateway callback (server-to-server)\n\nSRS ref: UC-05, FR-4-02\n\nCalled BY THE PAYMENT GATEWAY, not the buyer’s browser — authenticated via HMAC signature verification, not a buyer session. On a verified success, creates one Order per seller group, credits seller wallets (minus commission), clears the buyer’s cart, and notifies everyone. Included here mainly for reference/simulation during integration testing.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pp_MerchantID\": \"...\",\n  \"pp_Amount\": 900000,\n  \"pp_BillReference\": \"<checkoutToken>\",\n  \"pp_ResponseCode\": \"000\",\n  \"pp_TxnRefNo\": \"TXN123\",\n  \"pp_SecureHash\": \"<computed HMAC>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "GET /orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "List my orders"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /orders/:orderId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/orders/:orderId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "orders",
+                ":orderId"
+              ]
+            },
+            "description": "Get order detail / tracking"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /orders/:orderId/cancel",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/orders/:orderId/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "orders",
+                ":orderId",
+                "cancel"
+              ]
+            },
+            "description": "Cancel an order\n\nSRS ref: FR-3-05\n\nOnly allowed while the order is still \"pending\" (before the seller accepts it).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Changed my mind\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Support Tickets",
+      "item": [
+        {
+          "name": "POST /support-tickets",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/support-tickets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "support-tickets"
+              ]
+            },
+            "description": "Raise a support ticket",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"relatedOrderId\": \"{{order_id}}\",\n  \"subject\": \"Order never arrived\",\n  \"description\": \"My order shows \\\"delivered\\\" but I never received it. The seller is not responding to messages.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 201 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /support-tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/support-tickets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "support-tickets"
+              ]
+            },
+            "description": "List my tickets"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /support-tickets/:ticketId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/support-tickets/:ticketId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "support-tickets",
+                ":ticketId"
+              ]
+            },
+            "description": "Get my ticket detail"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /support-tickets/:ticketId/respond",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{buyer_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/buyer/support-tickets/:ticketId/respond",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "buyer",
+                "support-tickets",
+                ":ticketId",
+                "respond"
+              ]
+            },
+            "description": "Add a response to my ticket",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Still no response from the seller.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 200 or documented error\", () => {",
+                  "    pm.expect([200, 201, 400, 401, 403, 404, 409, 429].includes(pm.response.code)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "module_base",
+      "value": "/api/buyer"
+    }
+  ]
+}
